@@ -42,6 +42,13 @@ static const char* noopFuncs[] = {
 	"llvm.memset.p0i8.i64", "llvm.va_end",
 	// The following functions might not be NOOP. They need to be removed from this list in the future
 	"setrlimit", "getrlimit",
+	"__divine_free",
+	"__divine_choice",
+	"__divine_ap",
+    "llvm.expect.i1",
+    "llvm.expect.i32",
+	"llvm.expect.i64",
+	"__assert_rtn",
 	nullptr
 };
 
@@ -52,6 +59,7 @@ static const char* mallocFuncs[] = {
 	"strdup", "strndup",
 	"getenv",
 	"memalign", "posix_memalign",
+	"__divine_malloc",
 	nullptr
 };
 
