@@ -318,12 +318,30 @@ void Andersen::collectConstraintsForInstruction(const Instruction* inst)
 		// We have no intention to support exception-handling in the near future
 		case Instruction::LandingPad:
 		case Instruction::Resume:
+		{
+            errs() << *inst << "\n";
+            assert(false && "not implemented yet");
+        }
 		// Atomic instructions can be modeled by their non-atomic counterparts. To be supported
-		case Instruction::AtomicRMW:
+
 		case Instruction::AtomicCmpXchg:
 		{
-			errs() << *inst << "\n";
-			assert(false && "not implemented yet");
+		    for (int i = 1; i <= 2; i++) {
+                Value *Op = inst->getOperand (i);
+                LoadInst *Load = new LoadInst (Op, "", (Instruction *)nullptr);
+                collectConstraintsForInstruction (Load);
+		    }
+		}
+		case Instruction::AtomicRMW:
+        {
+            Value *Op = inst->getOperand (0);
+            LoadInst *Load = new LoadInst (Op, "", (Instruction *)nullptr);
+            collectConstraintsForInstruction (Load);
+            IntegerType *Bool = Type::getInt1Ty (inst->getContext());
+            Constant *Zero = Constant::getIntegerValue (Bool, APInt (1,0));
+            StoreInst *Store = new StoreInst (Zero, Op, (Instruction *)nullptr);
+            collectConstraintsForInstruction (Store);
+            break;
 		}
 		default:
 		{
