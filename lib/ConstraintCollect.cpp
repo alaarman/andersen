@@ -327,12 +327,20 @@ void Andersen::collectConstraintsForInstruction(const Instruction* inst)
 		case Instruction::AtomicCmpXchg:
 		case Instruction::AtomicRMW:
         {
-            Value *Op = inst->getOperand (0);
-            LoadInst *Load = new LoadInst (Op, "", (Instruction *)nullptr);
-            collectConstraintsForInstruction (Load);
-            Value *Op1 = inst->getOperand (1);
-            StoreInst *Store = new StoreInst (Op1, Op, (Instruction *)nullptr);
-            collectConstraintsForInstruction (Store);
+            if (inst->getOperand(1)->getType()->isPointerTy()) {
+                Value *Op = inst->getOperand (0);
+                Value *Read = inst->getOperand (1);
+                Value *Write = inst->getNumOperands() == 2 ? inst->getOperand (1) : inst->getOperand (2);
+                NodeIndex opIndex = nodeFactory.getValueNodeFor(Op);
+                assert(opIndex != AndersNodeFactory::InvalidIndex && "Failed to find load operand node");
+                NodeIndex readIndex = nodeFactory.getValueNodeFor(Read);
+                assert(readIndex != AndersNodeFactory::InvalidIndex && "Failed to find read value node");
+                constraints.emplace_back(AndersConstraint::LOAD, readIndex, opIndex);
+                NodeIndex writeIndex = nodeFactory.getValueNodeFor(Write);
+                errs () << *Write << "\n";
+                assert(writeIndex != AndersNodeFactory::InvalidIndex && "Failed to find write value node");
+                constraints.emplace_back(AndersConstraint::STORE, writeIndex, opIndex);
+            }
             break;
 		}
 		default:
